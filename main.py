@@ -1,5 +1,6 @@
 import os
 from flask import Flask, redirect
+import random
 
 app = Flask(__name__)
 
@@ -20,6 +21,20 @@ def hay_ganador(tablero):
             return True
     return False
 
+def jugada_maquina(tablero):
+    #paso de string a lista
+    tab = tablero.split(",")
+    # bandera para verificar si la maquina hizo su jugada
+    jugo = False
+    while (not jugo):
+        pos = random.randint(0,8)
+        if (tab[pos] == ''):
+            tab[pos] = "O"
+            jugo = True
+            #paso de lista a string
+            tablero = ",".join(tab)
+            return tablero
+    
 
 @app.route("/")
 def hello():
