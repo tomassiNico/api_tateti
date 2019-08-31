@@ -35,6 +35,15 @@ def jugada_maquina(tablero):
             tablero = ",".join(tab)
             return tablero
 
+def tablero_lleno(tablero):
+    tab = tablero.split(",")
+
+    # itero cada posicion, si hay una posicion vacia retorno False ya que no esta lleno
+    for pos in tab:
+        if pos == '':
+            return False
+    # si itero todos y no encontro lugar vacio esta lleno por lo tanto retorno True
+    return True
 
 @app.route("/")
 def hello():
@@ -70,6 +79,9 @@ def jugada_humano(pos):
     if hay_ganador(partida["tablero"]):
         partida["ganador"] = partida["jugador"]
         return redirect('/partida')
+    if tablero_lleno(partida["tablero"]):
+        partida["ganador"] = "Tablero lleno, hay un empate."
+        return redirect('/partida')
 
     return redirect('/partida/juega_maquina')
 
@@ -81,6 +93,9 @@ def maquina():
     # verifico si gano la maquina
     if hay_ganador(partida["tablero"]):
         partida["ganador"] = "Maquina Wall-e"
+    if tablero_lleno(partida["tablero"]):
+        partida["ganador"] = "Tablero lleno, hay un empate."
+        return redirect('/partida')
 
     return redirect('/partida')
 
