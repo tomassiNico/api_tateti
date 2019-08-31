@@ -1,6 +1,23 @@
 import os
 from flask import Flask, redirect
 import random
+import pymongo
+import json
+from flask import jsonify, request
+from bson import ObjectId
+from bson.json_util import dumps
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+
+client = pymongo.MongoClient("mongodb+srv://admin-tateti:admin@tateti-hgpwu.mongodb.net/test?retryWrites=true&w=majority")
+db = client.tateti
+collection = db.partidas
+
 
 app = Flask(__name__)
 
@@ -49,20 +66,41 @@ def tablero_lleno(tablero):
 def hello():
     return "Hello world!"
 
+@app.route("/partidas")
+def get_partidas():
+    partidas = collection.find()
+    resp = dumps(partidas)
+    return resp
 
-@app.route('/partida')
-def get_partida():
-    return partida
+@app.route('/partida/<id>', methods=['GET'])
+def get_partida(id):
+    partida = collection.find_one({'_id': ObjectId(id)})
+    resp = dumps(partida)
+    return resp
 
 
 @app.route('/nueva_partida')
 def nueva_partida():
-    partida = {"jugador":"Luis Alberto", "forma":"X", "tablero":",,,,,,,,,", "ganador":""}
-    return redirect('/partida')
+    _json = request.json
+    _jugador = _json["jugador"]
+    _forma = _json["forma"]
+    _add_date = _json["add_date"]
+
+    # valido los valores recibidos
+    if _jugador and _forma and _add_date and request.method == 'POST':
+        id = collection.insert({"jugador": _jugador, "add_date": _add_date, "forma": _forma, "tablero":",,,,,,,,", "ganador":""})
+        resp = jsonify("Nueva partida con id {} generada".format(id))
+        resp.status_code = 200
+    return redirect('/partida/{}'.format(id))
 
 
-@app.route('/partida/jugar/<int:pos>')
-def jugada_humano(pos):
+@app.route('/partida/<id>/jugar/<int:pos>')
+def jugada_humano(id, pos):
+    partida = collection.find_one({'_id': ObjectId(id)})
+    partida = dumps(partida)
+    partida = json.loads(partida)
+
+    #convierto en lista para tratarlo mas facil
     tab = partida["tablero"].split(",")
 
     #valido que no este ocupado ya la posicion
@@ -75,29 +113,39 @@ def jugada_humano(pos):
     tab[pos] = "X"
     partida["tablero"] = ",".join(tab)
 
+    collection.update_one({"_id": ObjectId(id)}, {"$set": { "tablero": partida["tablero"] }})
     # verifico si gano el humano
     if hay_ganador(partida["tablero"]):
         partida["ganador"] = partida["jugador"]
-        return redirect('/partida')
+        collection.update_one({"_id": ObjectId(partida["_id"])}, {"$set": { "ganador": partida["ganador"] }})
+        return redirect('/partida/{}'.format(id))
     if tablero_lleno(partida["tablero"]):
         partida["ganador"] = "Tablero lleno, hay un empate."
-        return redirect('/partida')
+        collection.update_one({"_id": ObjectId(partida["_id"])}, {"$set": { "ganador": partida["ganador"] }})
+        return redirect('/partida/{}'.format(id))
 
-    return redirect('/partida/juega_maquina')
+    return redirect('/partida/{}/juega_maquina'.format(id))
 
 
-@app.route('/partida/juega_maquina')
-def maquina():
+@app.route('/partida/<id>/juega_maquina')
+def maquina(id):
+    partida = collection.find_one({'_id': ObjectId(id)})
+    partida = dumps(partida)
+    partida = json.loads(partida)
+
     partida["tablero"] = jugada_maquina(partida["tablero"])
-
+    collection.update_one({"_id": ObjectId(id)}, {"$set": { "tablero": partida["tablero"] }})
     # verifico si gano la maquina
     if hay_ganador(partida["tablero"]):
         partida["ganador"] = "Maquina Wall-e"
+        collection.update_one({"_id": ObjectId(id)}, {"$set": { "tablero": partida["tablero"], "ganador": partida["ganador"] }})
+        return redirect('/partida/{}'.format(id))
     if tablero_lleno(partida["tablero"]):
         partida["ganador"] = "Tablero lleno, hay un empate."
-        return redirect('/partida')
+        collection.update_one({"_id": ObjectId(id)}, {"$set": { "tablero": partida["tablero"], "ganador": partida["ganador"] }})
+        return redirect('/partida/{}'.format(id))
 
-    return redirect('/partida')
+    return redirect('/partida/{}'.format(id))
 
 
 
