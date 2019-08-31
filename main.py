@@ -10,7 +10,7 @@ def hay_ganador(tablero):
     #paso de string a lista
     tab = tablero.split(",")
     #genero lista con combinaciones ganadoras
-    pos_ganadoras = [[0,1,2],[3,4,5],[6.7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
+    pos_ganadoras = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
 
     for pos in pos_ganadoras:
         if (tab[pos[0]] == '') or (tab[pos[1]] == '') or (tab[pos[2]] == ''):
@@ -65,12 +65,23 @@ def jugada_humano(pos):
 
     tab[pos] = "X"
     partida["tablero"] = ",".join(tab)
+
+    # verifico si gano el humano
+    if hay_ganador(partida["tablero"]):
+        partida["ganador"] = partida["jugador"]
+        return redirect('/partida')
+
     return redirect('/partida/juega_maquina')
 
 
 @app.route('/partida/juega_maquina')
 def maquina():
     partida["tablero"] = jugada_maquina(partida["tablero"])
+
+    # verifico si gano la maquina
+    if hay_ganador(partida["tablero"]):
+        partida["ganador"] = "Maquina Wall-e"
+
     return redirect('/partida')
 
 
