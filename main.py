@@ -34,7 +34,7 @@ def jugada_maquina(tablero):
             #paso de lista a string
             tablero = ",".join(tab)
             return tablero
-    
+
 
 @app.route("/")
 def hello():
@@ -47,6 +47,23 @@ def get_partida():
 @app.route('/nueva_partida')
 def nueva_partida():
     partida = {"jugador":"Luis Alberto", "forma":"X", "tablero":",,,,,,,,,", "ganador":""}
+    return redirect('/partida')
+
+@app.route('/partida/jugar/<int:pos>')
+def jugada_humano(pos):
+    tab = partida["tablero"].split(",")
+
+    #valido que no este ocupado ya la posicion
+    if tab[pos] != '':
+        return {"error": "Ya esta ocupada la posicion donde quiere jugar."}
+
+    #valido posicion dentro de rango 0 a 8
+    if pos < 0 or pos > 8:
+        return {"error": "Posicion fuera de rango, debe ser un entero dentro de 0 y 8 inclusive"}
+
+    tab[pos] = "X"
+    partida["tablero"] = ",".join(tab)
+
     return redirect('/partida')
 
 if __name__ == '__main__':
