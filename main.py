@@ -4,7 +4,7 @@ import random
 
 app = Flask(__name__)
 
-partida = {"jugador":"Luis Alberto", "forma":"X", "tablero":",,,,,,,,,", "ganador":""}
+partida = {"jugador":"Luis Alberto", "forma":"X", "tablero":",,,,,,,,", "ganador":""}
 
 def hay_ganador(tablero):
     #paso de string a lista
@@ -40,14 +40,17 @@ def jugada_maquina(tablero):
 def hello():
     return "Hello world!"
 
+
 @app.route('/partida')
 def get_partida():
     return partida
+
 
 @app.route('/nueva_partida')
 def nueva_partida():
     partida = {"jugador":"Luis Alberto", "forma":"X", "tablero":",,,,,,,,,", "ganador":""}
     return redirect('/partida')
+
 
 @app.route('/partida/jugar/<int:pos>')
 def jugada_humano(pos):
@@ -56,15 +59,21 @@ def jugada_humano(pos):
     #valido que no este ocupado ya la posicion
     if tab[pos] != '':
         return {"error": "Ya esta ocupada la posicion donde quiere jugar."}
-
     #valido posicion dentro de rango 0 a 8
     if pos < 0 or pos > 8:
         return {"error": "Posicion fuera de rango, debe ser un entero dentro de 0 y 8 inclusive"}
 
     tab[pos] = "X"
     partida["tablero"] = ",".join(tab)
+    return redirect('/partida/juega_maquina')
 
+
+@app.route('/partida/juega_maquina')
+def maquina():
+    partida["tablero"] = jugada_maquina(partida["tablero"])
     return redirect('/partida')
+
+
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
