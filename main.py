@@ -79,7 +79,7 @@ def get_partida(id):
     return resp
 
 
-@app.route('/nueva_partida')
+@app.route('/nueva_partida', methods=['POST'])
 def nueva_partida():
     _json = request.json
     _jugador = _json["jugador"]
