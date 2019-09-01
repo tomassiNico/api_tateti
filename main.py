@@ -117,11 +117,11 @@ def jugada_humano(id, pos):
     # verifico si gano el humano
     if hay_ganador(partida["tablero"]):
         partida["ganador"] = partida["jugador"]
-        collection.update_one({"_id": ObjectId(partida["_id"])}, {"$set": { "ganador": partida["ganador"] }})
+        collection.update_one({"_id": ObjectId(id)}, {"$set": { "ganador": partida["ganador"] }})
         return redirect('/partida/{}'.format(id))
     if tablero_lleno(partida["tablero"]):
         partida["ganador"] = "Tablero lleno, hay un empate."
-        collection.update_one({"_id": ObjectId(partida["_id"])}, {"$set": { "ganador": partida["ganador"] }})
+        collection.update_one({"_id": ObjectId(id)}, {"$set": { "ganador": partida["ganador"] }})
         return redirect('/partida/{}'.format(id))
 
     return redirect('/partida/{}/juega_maquina'.format(id))
