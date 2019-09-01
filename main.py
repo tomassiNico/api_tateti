@@ -70,7 +70,7 @@ def hello():
 #  todas las partidas
 @app.route("/partidas")
 def get_partidas():
-    partidas = collection.find()
+    partidas = collection.find().sort("add_date",-1)
     resp = dumps(partidas)
     return resp
 
