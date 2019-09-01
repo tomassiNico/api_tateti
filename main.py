@@ -114,6 +114,8 @@ def jugada_humano(id, pos):
     #convierto en lista para tratarlo mas facil
     tab = partida["tablero"].split(",")
 
+    if hay_ganador(partida["tablero"]):
+        return redirect('/partida/{}'.format(id))
     #valido que no este ocupado ya la posicion
     if tab[pos] != '':
         return {"error": "Ya esta ocupada la posicion donde quiere jugar."}
