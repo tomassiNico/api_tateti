@@ -85,10 +85,15 @@ def nueva_partida():
     _jugador = _json["jugador"]
     _forma = _json["forma"]
     _add_date = _json["add_date"]
+    # a partir de la forma seleccionada obtengo a la de la maquina
+    if _forma == "X":
+        forma_maq = "O"
+    else:
+        forma_maq = "X"
 
     # valido los valores recibidos
     if _jugador and _forma and _add_date and request.method == 'POST':
-        id = collection.insert({"jugador": _jugador, "add_date": _add_date, "forma": _forma, "tablero":",,,,,,,,", "ganador":""})
+        id = collection.insert({"jugador": _jugador, "add_date": _add_date, "forma": _forma, "forma_maq": forma_maq, "tablero":",,,,,,,,", "ganador":""})
         resp = jsonify("Nueva partida con id {} generada".format(id))
         resp.status_code = 200
     return redirect('/partida/{}'.format(id))
@@ -110,7 +115,7 @@ def jugada_humano(id, pos):
     if pos < 0 or pos > 8:
         return {"error": "Posicion fuera de rango, debe ser un entero dentro de 0 y 8 inclusive"}
 
-    tab[pos] = "X"
+    tab[pos] = partida["forma"]
     partida["tablero"] = ",".join(tab)
 
     collection.update_one({"_id": ObjectId(id)}, {"$set": { "tablero": partida["tablero"] }})
