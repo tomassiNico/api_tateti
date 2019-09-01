@@ -38,7 +38,7 @@ def hay_ganador(tablero):
             return True
     return False
 
-def jugada_maquina(tablero):
+def jugada_maquina(tablero, forma_maq):
     #paso de string a lista
     tab = tablero.split(",")
     # bandera para verificar si la maquina hizo su jugada
@@ -46,7 +46,7 @@ def jugada_maquina(tablero):
     while (not jugo):
         pos = random.randint(0,8)
         if (tab[pos] == ''):
-            tab[pos] = "O"
+            tab[pos] = forma_maq
             jugo = True
             #paso de lista a string
             tablero = ",".join(tab)
@@ -66,12 +66,16 @@ def tablero_lleno(tablero):
 def hello():
     return "Hello world!"
 
+
+#  todas las partidas
 @app.route("/partidas")
 def get_partidas():
     partidas = collection.find()
     resp = dumps(partidas)
     return resp
 
+
+# obtener una partida en particular a partir de su id
 @app.route('/partida/<id>', methods=['GET'])
 def get_partida(id):
     partida = collection.find_one({'_id': ObjectId(id)})
@@ -79,6 +83,7 @@ def get_partida(id):
     return resp
 
 
+# generar una nueva partida, una vez creada retorna la misma partida y sus datos
 @app.route('/nueva_partida', methods=['POST'])
 def nueva_partida():
     _json = request.json
@@ -99,6 +104,7 @@ def nueva_partida():
     return redirect('/partida/{}'.format(id))
 
 
+# para realizar una jugada
 @app.route('/partida/<id>/jugar/<int:pos>')
 def jugada_humano(id, pos):
     partida = collection.find_one({'_id': ObjectId(id)})
@@ -132,13 +138,14 @@ def jugada_humano(id, pos):
     return redirect('/partida/{}/juega_maquina'.format(id))
 
 
+# genera la jugada de la maquina Wall-e
 @app.route('/partida/<id>/juega_maquina')
 def maquina(id):
     partida = collection.find_one({'_id': ObjectId(id)})
     partida = dumps(partida)
     partida = json.loads(partida)
 
-    partida["tablero"] = jugada_maquina(partida["tablero"])
+    partida["tablero"] = jugada_maquina(partida["tablero"], partida["forma_maq"])
     collection.update_one({"_id": ObjectId(id)}, {"$set": { "tablero": partida["tablero"] }})
     # verifico si gano la maquina
     if hay_ganador(partida["tablero"]):
